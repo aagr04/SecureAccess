@@ -27,10 +27,11 @@ public class UsuarioApplicationService implements UsuarioUseCase {
     private final PasswordValidator passwordValidator;
     private final IdentificacionValidator identificacionValidator;
     private final EmailGeneratorService emailGenerator;
+    private final UsuarioPermissionPolicy permissionPolicy;
 
-    public List<Usuario> findAll() { return usuarios.findAllActive(); }
-    public Usuario findById(Long id) { return usuarios.findById(id).filter(u -> Boolean.TRUE.equals(u.getActivo())).orElseThrow(() -> new NotFoundException("Usuario no encontrado")); }
-    public Usuario findByUsername(String username) { return usuarios.findByUsername(username).filter(u -> Boolean.TRUE.equals(u.getActivo())).orElseThrow(() -> new NotFoundException("Usuario no encontrado")); }
+    public List<Usuario> findAll() { return usuarios.findAllActive().stream().map(this::withActiveRole).toList(); }
+    public Usuario findById(Long id) { return withActiveRole(activeUsuario(id)); }
+    public Usuario findByUsername(String username) { return withActiveRole(activeUsuario(username)); }
 
     @Transactional
     public Usuario create(UsuarioRequest r) {
@@ -42,27 +43,30 @@ public class UsuarioApplicationService implements UsuarioUseCase {
                 .sesionActiva(false).persona(persona).build());
         if (r.getIdRol() != null) assignRole(usuario, r.getIdRol());
         else assignRole(usuario, r.getRol());
-        return usuario;
+        return withActiveRole(usuario);
     }
 
     @Transactional
-    public Usuario update(Long id, UsuarioRequest r) {
-        Usuario current = findById(id);
-        if (isAdmin(current)) throw new BusinessException("No se puede actualizar otro administrador");
+    public Usuario update(String authenticatedUsername, Long id, UsuarioRequest r) {
+        Usuario actor = activeUsuario(authenticatedUsername);
+        Usuario current = activeUsuario(id);
+        boolean actorAdmin = isAdmin(actor);
+        permissionPolicy.assertCanUpdate(actorAdmin, isAdmin(current), isSameUser(actor, current));
         if (!current.getUsername().equalsIgnoreCase(r.getUsername()) && usuarios.existsByUsername(r.getUsername())) throw new BusinessException("El nombre de usuario ya existe");
         usernameValidator.validate(r.getUsername());
         if (r.getPassword() != null && !r.getPassword().isBlank()) {
             passwordValidator.validate(r.getPassword());
             current.setPassword(passwordEncoder.encode(r.getPassword()));
         }
+        updatePersona(current, r);
         current.setUsername(r.getUsername());
-        current.setStatus(r.getStatus() == null ? current.getStatus() : r.getStatus());
-        return usuarios.save(current);
+        if (actorAdmin) current.setStatus(r.getStatus() == null ? current.getStatus() : r.getStatus());
+        return withActiveRole(usuarios.save(current));
     }
 
     @Transactional
     public Usuario updateOwnProfile(String username, UsuarioRequest r) {
-        Usuario current = findByUsername(username);
+        Usuario current = activeUsuario(username);
         if (!current.getUsername().equalsIgnoreCase(r.getUsername()) && usuarios.existsByUsername(r.getUsername())) throw new BusinessException("El nombre de usuario ya existe");
         usernameValidator.validate(r.getUsername());
         if (r.getPassword() != null && !r.getPassword().isBlank()) {
@@ -81,20 +85,33 @@ public class UsuarioApplicationService implements UsuarioUseCase {
         }
         current.setUsername(r.getUsername());
         current.setPersona(personas.save(persona));
-        return usuarios.save(current);
+        return withActiveRole(usuarios.save(current));
     }
 
     @Transactional
-    public void delete(Long id) {
-        Usuario u = findById(id); u.setActivo(false); u.setSesionActiva(false); usuarios.save(u);
+    public void delete(String authenticatedUsername, Long id) {
+        Usuario actor = activeUsuario(authenticatedUsername);
+        Usuario u = activeUsuario(id);
+        permissionPolicy.assertCanDelete(isAdmin(actor), isAdmin(u));
+        u.setActivo(false);
+        u.setStatus(UsuarioStatus.INACTIVO);
+        u.setSesionActiva(false);
+        usuarios.save(u);
+        deactivatePersonaIfUnused(u);
     }
 
     @Transactional
-    public Usuario changeEstado(Long id, EstadoUsuarioRequest r) { Usuario u = findById(id); u.setStatus(r.getStatus()); if (r.getActivo() != null) u.setActivo(r.getActivo()); return usuarios.save(u);
+    public Usuario changeEstado(String authenticatedUsername, Long id, EstadoUsuarioRequest r) {
+        Usuario actor = activeUsuario(authenticatedUsername);
+        Usuario u = activeUsuario(id);
+        permissionPolicy.assertCanUpdate(isAdmin(actor), isAdmin(u), isSameUser(actor, u));
+        u.setStatus(r.getStatus());
+        if (r.getActivo() != null) u.setActivo(r.getActivo());
+        return withActiveRole(usuarios.save(u));
     }
 
     public List<Usuario> filter(UsuarioFilterRequest filter) {
-        return usuarios.filter(filter == null ? new UsuarioFilterRequest() : filter);
+        return usuarios.filter(filter == null ? new UsuarioFilterRequest() : filter).stream().map(this::withActiveRole).toList();
     }
 
     @Transactional
@@ -151,10 +168,52 @@ public class UsuarioApplicationService implements UsuarioUseCase {
         rolUsuarios.save(RolUsuario.builder().usuario(usuario).rol(rol).activo(true).build());
     }
 
+    private Usuario activeUsuario(Long id) {
+        return usuarios.findById(id).filter(u -> Boolean.TRUE.equals(u.getActivo())).orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+    }
+
+    private Usuario activeUsuario(String username) {
+        return usuarios.findByUsername(username).filter(u -> Boolean.TRUE.equals(u.getActivo())).orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+    }
+
+    private Usuario withActiveRole(Usuario usuario) {
+        if (usuario == null || usuario.getIdUsuario() == null) return usuario;
+        rolUsuarios.findActiveByUsuarioId(usuario.getIdUsuario())
+                .map(ru -> ru.getRol() == null ? null : ru.getRol().getNombre())
+                .ifPresent(usuario::setRol);
+        return usuario;
+    }
+
     private boolean isAdmin(Usuario usuario) {
         return rolUsuarios.findActiveByUsuarioId(usuario.getIdUsuario())
-                .map(ru -> ru.getRol() != null && "ADMIN".equalsIgnoreCase(ru.getRol().getNombre()))
+                .map(ru -> ru.getRol() != null && permissionPolicy.isAdminRole(ru.getRol().getNombre()))
                 .orElse(false);
+    }
+
+    private boolean isSameUser(Usuario actor, Usuario target) {
+        return Objects.equals(actor.getIdUsuario(), target.getIdUsuario());
+    }
+
+    private void deactivatePersonaIfUnused(Usuario usuario) {
+        Persona persona = usuario.getPersona();
+        if (persona == null || persona.getIdPersona() == null) return;
+        if (usuarios.existsAnotherActiveByPersonaId(persona.getIdPersona(), usuario.getIdUsuario())) return;
+        persona.setActivo(false);
+        personas.save(persona);
+    }
+
+    private void updatePersona(Usuario usuario, UsuarioRequest r) {
+        Persona persona = usuario.getPersona();
+        if (persona == null) throw new BusinessException("Usuario sin datos personales");
+        persona.setNombres(r.getNombres());
+        persona.setApellidos(r.getApellidos());
+        persona.setFechaNacimiento(r.getFechaNacimiento());
+        if (r.getIdentificacion() != null && !r.getIdentificacion().equals(persona.getIdentificacion())) {
+            identificacionValidator.validate(r.getIdentificacion());
+            if (usuarios.existsActiveByPersonaIdentificacion(r.getIdentificacion())) throw new BusinessException("Ya existe una cuenta registrada con esta identificacion");
+            persona.setIdentificacion(r.getIdentificacion());
+        }
+        usuario.setPersona(personas.save(persona));
     }
 
     private void validateBulkFile(BulkUploadRequest file) {

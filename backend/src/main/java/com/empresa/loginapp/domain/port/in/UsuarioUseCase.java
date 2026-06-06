@@ -15,13 +15,13 @@ public interface UsuarioUseCase {
 
     Usuario create(UsuarioRequest request);
 
-    Usuario update(Long id, UsuarioRequest request);
+    Usuario update(String authenticatedUsername, Long id, UsuarioRequest request);
 
     Usuario updateOwnProfile(String username, UsuarioRequest request);
 
-    void delete(Long id);
+    void delete(String authenticatedUsername, Long id);
 
-    Usuario changeEstado(Long id, EstadoUsuarioRequest request);
+    Usuario changeEstado(String authenticatedUsername, Long id, EstadoUsuarioRequest request);
 
     List<Usuario> filter(UsuarioFilterRequest filter);
 

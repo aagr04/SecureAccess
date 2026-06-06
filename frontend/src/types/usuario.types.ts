@@ -8,6 +8,7 @@ export interface Usuario {
   activo: boolean;
   intentosFallidos: number;
   sesionActiva: boolean;
+  rol?: string;
   persona?: Persona;
 }
 

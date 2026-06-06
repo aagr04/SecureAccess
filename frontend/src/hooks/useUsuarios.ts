@@ -70,6 +70,7 @@ export const useUsuarios = (autoLoad = true) => {
       await listar();
     } catch (err) {
       handleError(err, 'No se pudo eliminar el usuario.');
+      throw err;
     } finally {
       setLoading(false);
     }

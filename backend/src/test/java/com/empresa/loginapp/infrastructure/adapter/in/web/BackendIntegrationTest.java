@@ -98,7 +98,7 @@ class BackendIntegrationTest {
 
         mockMvc.perform(delete("/api/usuarios/3").with(csrf()))
                 .andExpect(status().isOk());
-        verify(usuarioUseCase).delete(3L);
+        verify(usuarioUseCase).delete("user", 3L);
     }
 
     @Test

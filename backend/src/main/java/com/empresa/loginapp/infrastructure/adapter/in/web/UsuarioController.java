@@ -42,8 +42,8 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public UsuarioResponse update(@PathVariable Long id, @Valid @RequestBody UsuarioRequest request) {
-        return UsuarioMapper.toResponse(usuarios.update(id, request));
+    public UsuarioResponse update(Principal principal, @PathVariable Long id, @Valid @RequestBody UsuarioRequest request) {
+        return UsuarioMapper.toResponse(usuarios.update(principal.getName(), id, request));
     }
 
     @PutMapping("/me")
@@ -52,13 +52,13 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        usuarios.delete(id);
+    public void delete(Principal principal, @PathVariable Long id) {
+        usuarios.delete(principal.getName(), id);
     }
 
     @PatchMapping("/{id}/estado") @PreAuthorize("hasRole('ADMIN')")
-    public UsuarioResponse estado(@PathVariable Long id, @Valid @RequestBody CambiarEstadoUsuarioRequest request) {
-        return UsuarioMapper.toResponse(usuarios.changeEstado(id, request));
+    public UsuarioResponse estado(Principal principal, @PathVariable Long id, @Valid @RequestBody CambiarEstadoUsuarioRequest request) {
+        return UsuarioMapper.toResponse(usuarios.changeEstado(principal.getName(), id, request));
     }
 
     @PostMapping("/bulk") @PreAuthorize("hasRole('ADMIN')")

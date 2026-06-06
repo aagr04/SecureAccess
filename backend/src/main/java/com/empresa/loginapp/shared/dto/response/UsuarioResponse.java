@@ -14,5 +14,6 @@ public class UsuarioResponse {
     private Boolean activo;
     private Integer intentosFallidos;
     private Boolean sesionActiva;
+    private String rol;
     private PersonaResponse persona;
 }

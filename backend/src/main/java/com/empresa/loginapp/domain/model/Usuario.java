@@ -16,6 +16,7 @@ public class Usuario {
     private Boolean activo;
     private Integer intentosFallidos;
     private Boolean sesionActiva;
+    private String rol;
     private Persona persona;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;

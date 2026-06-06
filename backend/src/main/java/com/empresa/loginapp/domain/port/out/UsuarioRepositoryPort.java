@@ -20,6 +20,8 @@ public interface UsuarioRepositoryPort {
 
     boolean existsByEmail(String email);
 
+    boolean existsAnotherActiveByPersonaId(Long idPersona, Long excludedUsuarioId);
+
     Set<String> findAllEmails();
 
     Usuario save(Usuario usuario);

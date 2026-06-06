@@ -61,7 +61,7 @@ const mapBackendError = (message?: string, status?: number): string => {
   if (normalized.includes('password') || normalized.includes('contrasena')) return 'Contraseña incorrecta.';
   if (normalized.includes('bloque')) return 'Usuario bloqueado.';
   if (normalized.includes('sesion activa')) return 'El usuario ya tiene una sesion activa.';
-  if (status === 403) return 'Acceso denegado.';
+  if (status === 403) return message || 'Acceso denegado.';
   if (status === 401) return 'Token expirado o invalido. Inicie sesion nuevamente.';
   if (status === 400) return message || 'Error de validacion.';
   if (status && status >= 500) return 'Error de servidor. Intente nuevamente mas tarde.';

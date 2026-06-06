@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { UsuariosPage } from '../pages/UsuariosPage';
 
@@ -26,9 +26,12 @@ vi.mock('../components/usuarios/UsuarioForm', () => ({
 describe('UsuariosPage', () => {
   const listar = vi.fn();
   const filtrar = vi.fn();
+  const eliminar = vi.fn();
+  const scrollIntoView = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
     mocks.useUsuarios.mockReturnValue({
       usuarios: [],
       loading: false,
@@ -37,7 +40,7 @@ describe('UsuariosPage', () => {
       filtrar,
       guardar: vi.fn(),
       cambiarEstado: vi.fn(),
-      eliminar: vi.fn()
+      eliminar
     });
   });
 
@@ -77,5 +80,65 @@ describe('UsuariosPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /limpiar filtros/i }));
 
     expect(listar).toHaveBeenCalled();
+  });
+
+  it('al editar desplaza al formulario', async () => {
+    mocks.useAuth.mockReturnValue({ user: { idUsuario: 9, rol: 'ADMIN' } });
+    mocks.useUsuarios.mockReturnValue({
+      usuarios: [
+        {
+          idUsuario: 1,
+          username: 'User1234',
+          email: 'user@test.com',
+          status: 'ACTIVO',
+          activo: true,
+          intentosFallidos: 0,
+          sesionActiva: false,
+          rol: 'USER'
+        }
+      ],
+      loading: false,
+      error: null,
+      listar,
+      filtrar,
+      guardar: vi.fn(),
+      cambiarEstado: vi.fn(),
+      eliminar
+    });
+
+    render(<UsuariosPage />);
+    fireEvent.click(screen.getByRole('button', { name: /editar/i }));
+
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' }));
+  });
+
+  it('muestra mensaje claro si ADMIN selecciona otro ADMIN', async () => {
+    mocks.useAuth.mockReturnValue({ user: { idUsuario: 9, rol: 'ADMIN' } });
+    mocks.useUsuarios.mockReturnValue({
+      usuarios: [
+        {
+          idUsuario: 2,
+          username: 'Admin5678',
+          email: 'admin2@test.com',
+          status: 'ACTIVO',
+          activo: true,
+          intentosFallidos: 0,
+          sesionActiva: false,
+          rol: 'ADMIN'
+        }
+      ],
+      loading: false,
+      error: null,
+      listar,
+      filtrar,
+      guardar: vi.fn(),
+      cambiarEstado: vi.fn(),
+      eliminar
+    });
+
+    render(<UsuariosPage />);
+    fireEvent.click(screen.getByRole('button', { name: /editar/i }));
+
+    expect(await screen.findByText('No se puede actualizar otro administrador.')).toBeInTheDocument();
   });
 });

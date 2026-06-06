@@ -17,6 +17,7 @@ public final class UsuarioMapper {
                 .activo(usuario.getActivo())
                 .intentosFallidos(usuario.getIntentosFallidos())
                 .sesionActiva(usuario.getSesionActiva())
+                .rol(usuario.getRol())
                 .persona(PersonaMapper.toResponse(usuario.getPersona()))
                 .build();
     }

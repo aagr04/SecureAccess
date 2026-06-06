@@ -1,6 +1,7 @@
 package com.empresa.loginapp.application.service;
 
 import com.empresa.loginapp.domain.exception.BusinessException;
+import com.empresa.loginapp.domain.exception.ForbiddenException;
 import com.empresa.loginapp.domain.model.*;
 import com.empresa.loginapp.domain.port.out.*;
 import com.empresa.loginapp.domain.service.*;
@@ -29,7 +30,7 @@ class UsuarioApplicationServiceTest {
     @BeforeEach
     void setup() {
         service = new UsuarioApplicationService(usuarios, personas, roles, rolUsuarios, new BCryptPasswordEncoder(),
-                new UsernameValidator(), new PasswordValidator(), new IdentificacionValidator(), new EmailGeneratorService());
+                new UsernameValidator(), new PasswordValidator(), new IdentificacionValidator(), new EmailGeneratorService(), new UsuarioPermissionPolicy());
     }
 
     @Test
@@ -79,23 +80,39 @@ class UsuarioApplicationServiceTest {
 
     @Test
     void softDeleteMarcaUsuarioInactivoYSinSesion() {
-        Usuario usuario = Usuario.builder().idUsuario(1L).username("Admin1234").activo(true).sesionActiva(true).build();
+        Usuario admin = Usuario.builder().idUsuario(10L).username("Admin1234").activo(true).build();
+        Persona persona = Persona.builder().idPersona(2L).activo(true).build();
+        Usuario usuario = Usuario.builder().idUsuario(1L).username("User1234").activo(true).status(UsuarioStatus.ACTIVO).sesionActiva(true).persona(persona).build();
+        when(usuarios.findByUsername("Admin1234")).thenReturn(Optional.of(admin));
         when(usuarios.findById(1L)).thenReturn(Optional.of(usuario));
-        service.delete(1L);
+        when(rolUsuarios.findActiveByUsuarioId(10L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("ADMIN").build()).build()));
+        when(rolUsuarios.findActiveByUsuarioId(1L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("USER").build()).build()));
+        when(usuarios.existsAnotherActiveByPersonaId(2L, 1L)).thenReturn(false);
+        service.delete("Admin1234", 1L);
         assertThat(usuario.getActivo()).isFalse();
+        assertThat(usuario.getStatus()).isEqualTo(UsuarioStatus.INACTIVO);
         assertThat(usuario.getSesionActiva()).isFalse();
+        assertThat(persona.getActivo()).isFalse();
         verify(usuarios).save(usuario);
+        verify(personas).save(persona);
     }
 
     @Test
     void actualizarSinPasswordMantienePasswordActual() {
-        Usuario usuario = Usuario.builder().idUsuario(1L).username("Admin1234").password("hash-actual").status("ACTIVO").activo(true).build();
+        Usuario admin = Usuario.builder().idUsuario(10L).username("Admin1234").activo(true).build();
+        Persona persona = Persona.builder().idPersona(1L).nombres("Persona").apellidos("Admin").identificacion("0912345678").activo(true).build();
+        Usuario usuario = Usuario.builder().idUsuario(1L).username("User1234").password("hash-actual").status("ACTIVO").activo(true).persona(persona).build();
         UsuarioRequest r = request();
+        r.setUsername("User1234");
         r.setPassword(null);
+        when(usuarios.findByUsername("Admin1234")).thenReturn(Optional.of(admin));
         when(usuarios.findById(1L)).thenReturn(Optional.of(usuario));
+        when(rolUsuarios.findActiveByUsuarioId(10L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("ADMIN").build()).build()));
+        when(rolUsuarios.findActiveByUsuarioId(1L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("USER").build()).build()));
+        when(personas.save(persona)).thenReturn(persona);
         when(usuarios.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        Usuario actualizado = service.update(1L, r);
+        Usuario actualizado = service.update("Admin1234", 1L, r);
 
         assertThat(actualizado.getPassword()).isEqualTo("hash-actual");
         verify(usuarios).save(usuario);
@@ -103,12 +120,54 @@ class UsuarioApplicationServiceTest {
 
     @Test
     void noActualizaAdministradoresDesdeMantenimiento() {
-        Usuario usuario = Usuario.builder().idUsuario(1L).username("Admin1234").password("hash-actual").status("ACTIVO").activo(true).build();
+        Usuario admin = Usuario.builder().idUsuario(10L).username("Admin1234").activo(true).build();
+        Usuario usuario = Usuario.builder().idUsuario(1L).username("Admin5678").password("hash-actual").status("ACTIVO").activo(true).build();
+        when(usuarios.findByUsername("Admin1234")).thenReturn(Optional.of(admin));
         when(usuarios.findById(1L)).thenReturn(Optional.of(usuario));
+        when(rolUsuarios.findActiveByUsuarioId(10L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("ADMIN").build()).build()));
         when(rolUsuarios.findActiveByUsuarioId(1L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("ADMIN").build()).build()));
 
-        assertThatThrownBy(() -> service.update(1L, request())).isInstanceOf(BusinessException.class)
+        assertThatThrownBy(() -> service.update("Admin1234", 1L, request())).isInstanceOf(ForbiddenException.class)
                 .hasMessageContaining("administrador");
+    }
+
+    @Test
+    void userSoloActualizaSusDatos() {
+        Persona persona = Persona.builder().idPersona(1L).nombres("Persona").apellidos("Admin").identificacion("0912345678").activo(true).build();
+        Usuario user = Usuario.builder().idUsuario(1L).username("User1234").password("hash-actual").status("ACTIVO").activo(true).persona(persona).build();
+        Usuario other = Usuario.builder().idUsuario(2L).username("Other1234").password("hash-actual").status("ACTIVO").activo(true).build();
+        UsuarioRequest r = request();
+        r.setUsername("User1234");
+        r.setPassword(null);
+        when(usuarios.findByUsername("User1234")).thenReturn(Optional.of(user));
+        when(usuarios.findById(1L)).thenReturn(Optional.of(user));
+        when(rolUsuarios.findActiveByUsuarioId(1L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("USER").build()).build()));
+        when(personas.save(persona)).thenReturn(persona);
+        when(usuarios.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        assertThat(service.update("User1234", 1L, r).getUsername()).isEqualTo("User1234");
+
+        when(usuarios.findById(2L)).thenReturn(Optional.of(other));
+        when(rolUsuarios.findActiveByUsuarioId(2L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("USER").build()).build()));
+        assertThatThrownBy(() -> service.update("User1234", 2L, r)).isInstanceOf(ForbiddenException.class)
+                .hasMessageContaining("propios datos");
+    }
+
+    @Test
+    void noDesactivaPersonaSiTieneOtroUsuarioActivo() {
+        Usuario admin = Usuario.builder().idUsuario(10L).username("Admin1234").activo(true).build();
+        Persona persona = Persona.builder().idPersona(2L).activo(true).build();
+        Usuario usuario = Usuario.builder().idUsuario(1L).username("User1234").activo(true).status(UsuarioStatus.ACTIVO).sesionActiva(true).persona(persona).build();
+        when(usuarios.findByUsername("Admin1234")).thenReturn(Optional.of(admin));
+        when(usuarios.findById(1L)).thenReturn(Optional.of(usuario));
+        when(rolUsuarios.findActiveByUsuarioId(10L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("ADMIN").build()).build()));
+        when(rolUsuarios.findActiveByUsuarioId(1L)).thenReturn(Optional.of(RolUsuario.builder().rol(Rol.builder().nombre("USER").build()).build()));
+        when(usuarios.existsAnotherActiveByPersonaId(2L, 1L)).thenReturn(true);
+
+        service.delete("Admin1234", 1L);
+
+        assertThat(persona.getActivo()).isTrue();
+        verify(personas, never()).save(any());
     }
 
     @Test

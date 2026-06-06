@@ -26,6 +26,9 @@ public interface UsuarioJpaRepository extends JpaRepository<UsuarioEntity, Long>
 
     boolean existsActiveByPersonaIdentificacion(@Param("identificacion") String identificacion);
 
+    @Query("select count(u)>0 from UsuarioEntity u where u.activo=true and u.persona.idPersona=:idPersona and u.idUsuario<>:excludedUsuarioId")
+    boolean existsAnotherActiveByPersonaId(@Param("idPersona") Long idPersona, @Param("excludedUsuarioId") Long excludedUsuarioId);
+
     @Query("select u.email from UsuarioEntity u")
 
     Set<String> findAllEmails();

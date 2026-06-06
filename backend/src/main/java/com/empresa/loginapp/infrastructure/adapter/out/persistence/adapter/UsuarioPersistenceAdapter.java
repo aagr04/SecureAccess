@@ -48,6 +48,10 @@ public class UsuarioPersistenceAdapter implements UsuarioRepositoryPort {
         return repository.existsByEmailIgnoreCase(email);
     }
 
+    public boolean existsAnotherActiveByPersonaId(Long idPersona, Long excludedUsuarioId) {
+        return repository.existsAnotherActiveByPersonaId(idPersona, excludedUsuarioId);
+    }
+
     public Set<String> findAllEmails() {
         return repository.findAllEmails();
     }

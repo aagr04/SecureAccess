@@ -1,0 +1,80 @@
+{
+  "info": {
+    "name": "LoginApp Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Login", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/auth/login", "body": { "mode": "raw", "raw": "{\n  \"credential\": \"Admin1234\",\n  \"password\": \"Admin@1234\"\n}" } } },
+        { "name": "Logout", "request": { "method": "POST", "url": "{{baseUrl}}/auth/logout" } },
+        { "name": "Recover", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/auth/recover", "body": { "mode": "raw", "raw": "{\n  \"credential\": \"Admin1234\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        { "name": "Listar", "request": { "method": "GET", "url": "{{baseUrl}}/usuarios" } },
+        { "name": "Obtener", "request": { "method": "GET", "url": "{{baseUrl}}/usuarios/1" } },
+        { "name": "Crear", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/usuarios", "body": { "mode": "raw", "raw": "{\n  \"username\":\"Test1234\",\n  \"password\":\"Test@1234\",\n  \"nombres\":\"Juan Alberto\",\n  \"apellidos\":\"Piguave Loor\",\n  \"identificacion\":\"0934567890\",\n  \"idRol\":2\n}" } } },
+        { "name": "Actualizar", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/usuarios/1", "body": { "mode": "raw", "raw": "{\n  \"username\":\"Admin1234\",\n  \"password\":\"Admin@1234\",\n  \"status\":\"ACTIVO\"\n}" } } },
+        { "name": "Eliminar logico", "request": { "method": "DELETE", "url": "{{baseUrl}}/usuarios/3" } },
+        { "name": "Cambiar estado", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/usuarios/1/estado", "body": { "mode": "raw", "raw": "{\n  \"status\":\"ACTIVO\",\n  \"activo\":true\n}" } } },
+        { "name": "Filtro", "request": { "method": "GET", "url": "{{baseUrl}}/usuarios/filter?username=Admin&rol=ADMIN" } },
+        { "name": "Bulk", "request": { "method": "POST", "url": "{{baseUrl}}/usuarios/bulk", "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "" }] } } }
+      ]
+    },
+    {
+      "name": "Personas",
+      "item": [
+        { "name": "Listar", "request": { "method": "GET", "url": "{{baseUrl}}/personas" } },
+        { "name": "Obtener", "request": { "method": "GET", "url": "{{baseUrl}}/personas/1" } },
+        { "name": "Crear", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/personas", "body": { "mode": "raw", "raw": "{\n  \"nombres\":\"Maria\",\n  \"apellidos\":\"Lopez Vera\",\n  \"identificacion\":\"0945678901\"\n}" } } },
+        { "name": "Actualizar", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/personas/1", "body": { "mode": "raw", "raw": "{\n  \"nombres\":\"Persona\",\n  \"apellidos\":\"Admin\",\n  \"identificacion\":\"0912345678\"\n}" } } },
+        { "name": "Eliminar", "request": { "method": "DELETE", "url": "{{baseUrl}}/personas/3" } }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        { "name": "Listar", "request": { "method": "GET", "url": "{{baseUrl}}/roles" } },
+        { "name": "Obtener", "request": { "method": "GET", "url": "{{baseUrl}}/roles/1" } },
+        { "name": "Crear", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/roles", "body": { "mode": "raw", "raw": "{ \"nombre\":\"AUDITOR\" }" } } },
+        { "name": "Actualizar", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/roles/3", "body": { "mode": "raw", "raw": "{ \"nombre\":\"AUDITOR\" }" } } },
+        { "name": "Eliminar", "request": { "method": "DELETE", "url": "{{baseUrl}}/roles/3" } }
+      ]
+    },
+    {
+      "name": "Opciones",
+      "item": [
+        { "name": "Listar", "request": { "method": "GET", "url": "{{baseUrl}}/opciones" } },
+        { "name": "Obtener", "request": { "method": "GET", "url": "{{baseUrl}}/opciones/1" } },
+        { "name": "Crear", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/opciones", "body": { "mode": "raw", "raw": "{\n  \"nombre\":\"Reportes\",\n  \"ruta\":\"/reportes\",\n  \"icono\":\"file-text\",\n  \"orden\":9\n}" } } },
+        { "name": "Actualizar", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/opciones/1", "body": { "mode": "raw", "raw": "{\n  \"nombre\":\"Dashboard\",\n  \"ruta\":\"/dashboard\",\n  \"icono\":\"layout-dashboard\",\n  \"orden\":1\n}" } } },
+        { "name": "Eliminar", "request": { "method": "DELETE", "url": "{{baseUrl}}/opciones/9" } }
+      ]
+    },
+    {
+      "name": "Rol Opciones",
+      "item": [
+        { "name": "Listar", "request": { "method": "GET", "url": "{{baseUrl}}/rol-opciones" } },
+        { "name": "Obtener", "request": { "method": "GET", "url": "{{baseUrl}}/rol-opciones/1" } },
+        { "name": "Crear", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/rol-opciones", "body": { "mode": "raw", "raw": "{\n  \"idRol\":1,\n  \"idOpcion\":1\n}" } } },
+        { "name": "Actualizar", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/rol-opciones/1", "body": { "mode": "raw", "raw": "{\n  \"idRol\":1,\n  \"idOpcion\":1\n}" } } },
+        { "name": "Eliminar", "request": { "method": "DELETE", "url": "{{baseUrl}}/rol-opciones/1" } }
+      ]
+    },
+    { "name": "Menu", "item": [{ "name": "Menu autenticado", "request": { "method": "GET", "url": "{{baseUrl}}/menu" } }] },
+    { "name": "Sessions", "item": [{ "name": "Listar", "request": { "method": "GET", "url": "{{baseUrl}}/sessions" } }, { "name": "Por usuario", "request": { "method": "GET", "url": "{{baseUrl}}/sessions/1" } }] },
+    { "name": "Dashboard", "item": [{ "name": "Resumen", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/resumen" } }, { "name": "Sesiones fallidas", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/sesiones-fallidas" } }] }
+  ]
+}

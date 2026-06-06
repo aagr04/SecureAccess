@@ -1,0 +1,8 @@
+target/
+.idea/
+*.iml
+*.iws
+.DS_Store
+*.log
+.mvn/wrapper/maven.zip
+.mvn/wrapper/apache-maven-*/

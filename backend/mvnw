@@ -1,0 +1,10 @@
+#!/bin/sh
+BASE_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+WRAPPER_DIR="$BASE_DIR/.mvn/wrapper"
+MAVEN_HOME="$WRAPPER_DIR/apache-maven-3.9.9"
+if [ ! -x "$MAVEN_HOME/bin/mvn" ]; then
+  mkdir -p "$WRAPPER_DIR"
+  curl -L "https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz" -o "$WRAPPER_DIR/maven.tar.gz"
+  tar -xzf "$WRAPPER_DIR/maven.tar.gz" -C "$WRAPPER_DIR"
+fi
+exec "$MAVEN_HOME/bin/mvn" "$@"

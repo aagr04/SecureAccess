@@ -11,6 +11,7 @@ Backend Java Spring Boot para login, usuarios, roles, menu dinamico, sesiones y 
 - Spring Data JPA / Hibernate
 - Spring Security
 - JWT con `jjwt`
+- Redis para blacklist de tokens por logout
 - PostgreSQL
 - Lombok
 - Jakarta Validation
@@ -28,7 +29,7 @@ La aplicacion separa dominio, casos de uso e infraestructura:
 - `domain/port/in`: contratos de entrada o casos de uso.
 - `domain/port/out`: contratos de salida hacia persistencia/funciones.
 - `application/service`: implementacion de casos de uso y reglas de negocio.
-- `infrastructure/adapter/in/web`: controllers REST.
+- `infrastructure/adapter/in/web/api`: controllers REST de la capa Web API.
 - `infrastructure/adapter/out/persistence`: entidades JPA, repositorios, adapters, mappers y Criteria Builder.
 - `infrastructure/security`: JWT, filtro y Spring Security.
 - `shared/dto`: requests/responses.
@@ -46,6 +47,25 @@ spring.datasource.password=postgres
 ```
 
 Ajustar usuario/password si tu PostgreSQL local usa otros valores.
+
+## Configurar Redis y cookies
+
+```properties
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+spring.data.redis.timeout=60000
+app.security.cookie.secure=false
+app.security.cookie.same-site=Lax
+app.cors.allowed-origins=http://localhost:5173,http://127.0.0.1:5173
+```
+
+En produccion usar HTTPS:
+
+```properties
+app.security.cookie.secure=true
+app.security.cookie.same-site=None
+app.cors.allowed-origins=https://URL_FRONTEND_PUBLICO
+```
 
 ## Ejecutar scripts
 
@@ -99,18 +119,16 @@ Swagger queda disponible en:
 http://localhost:8080/swagger-ui/index.html
 ```
 
-## JWT
+## JWT con cookie segura
 
 Rutas publicas:
 
 - `POST /api/auth/login`
 - `POST /api/auth/recover`
 
-Usar el token retornado por login:
+El login responde `Set-Cookie: ACCESS_TOKEN=...` con `HttpOnly`, `Path=/`, `SameSite` configurable y `Secure` configurable. El token no se expone en el body y el filtro JWT lee la cookie `ACCESS_TOKEN`.
 
-```http
-Authorization: Bearer <token>
-```
+Logout invalida el `jti` del JWT en Redis con TTL igual al tiempo restante del token y elimina la cookie del navegador.
 
 Rutas ADMIN:
 
@@ -161,7 +179,7 @@ USER:
 
 ## Endpoints principales
 
-- Auth: `/api/auth/login`, `/api/auth/logout`, `/api/auth/recover`
+- Auth: `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`, `/api/auth/recover`
 - Usuarios: `/api/usuarios`, `/api/usuarios/filter`, `/api/usuarios/bulk`
 - Personas: `/api/personas`
 - Roles: `/api/roles`

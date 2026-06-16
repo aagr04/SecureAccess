@@ -43,7 +43,6 @@ describe('BienvenidaPage', () => {
     render(
       <AuthContext.Provider
         value={{
-          token: 'token',
           user: { idUsuario: 1, username: 'Juan2024A', email: 'jpiguavel@mail.com', rol: 'USER' },
           menu: [],
           isAuthenticated: true,

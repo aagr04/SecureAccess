@@ -55,7 +55,9 @@ class BackendIntegrationTest {
         mockMvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"login\":\"Admin1234\",\"password\":\"Admin@1234\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("token"));
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("ACCESS_TOKEN=token")))
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("HttpOnly")))
+                .andExpect(jsonPath("$.token").doesNotExist());
 
         when(authUseCase.login(any())).thenThrow(new BusinessException("Credenciales invalidas"));
         mockMvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
@@ -67,6 +69,43 @@ class BackendIntegrationTest {
     void usuariosSinTokenDevuelve401() throws Exception {
         mockMvc.perform(get("/api/usuarios"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void authMeSinCookieDevuelve401() throws Exception {
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "Admin1234", roles = "ADMIN")
+    void authMeConUsuarioAutenticadoDevuelveSesion() throws Exception {
+        when(authUseCase.me("Admin1234")).thenReturn(AuthResponse.builder()
+                .idUsuario(1L)
+                .username("Admin1234")
+                .email("admin@mail.com")
+                .rol("ADMIN")
+                .menu(List.of(MenuResponse.builder().nombre("Dashboard").ruta("/dashboard").build()))
+                .build());
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").doesNotExist())
+                .andExpect(jsonPath("$.username").value("Admin1234"))
+                .andExpect(jsonPath("$.rol").value("ADMIN"))
+                .andExpect(jsonPath("$.menu[0].nombre").value("Dashboard"));
+    }
+
+    @Test
+    @WithMockUser(username = "Admin1234", roles = "ADMIN")
+    void logoutEliminaCookie() throws Exception {
+        mockMvc.perform(post("/api/auth/logout").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("ACCESS_TOKEN=")))
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("Max-Age=0")))
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("HttpOnly")));
+
+        verify(authUseCase).logout("Admin1234", null);
     }
 
     @Test

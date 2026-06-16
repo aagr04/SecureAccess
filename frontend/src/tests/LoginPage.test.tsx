@@ -10,7 +10,6 @@ const renderLogin = () =>
   render(
     <AuthContext.Provider
       value={{
-        token: null,
         user: null,
         menu: [],
         isAuthenticated: false,
@@ -56,7 +55,6 @@ describe('LoginPage', () => {
     render(
       <AuthContext.Provider
         value={{
-          token: null,
           user: null,
           menu: [],
           isAuthenticated: false,

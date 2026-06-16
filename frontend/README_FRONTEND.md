@@ -10,7 +10,8 @@ Frontend React 18 + TypeScript + Vite para la prueba tecnica LoginApp.
 - Axios
 - React Router DOM
 - Context API
-- JWT con `Authorization: Bearer TOKEN`
+- Secure cookies con `withCredentials`
+- Tailwind CSS
 - Vitest y React Testing Library
 
 ## Abrir en Visual Studio Code
@@ -59,6 +60,7 @@ Alias de compatibilidad:
 
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
+- `GET /api/auth/me`
 - `POST /api/auth/recover`
 - `GET /api/menu`
 - `GET /api/usuarios`
@@ -76,6 +78,26 @@ Regla importante:
 - Menu PostgreSQL: `Sesiones -> ruta /sesiones, icono clock`
 
 El storage normaliza menus antiguos con `/sessions` hacia `/sesiones`.
+
+## Autenticacion con cookies
+
+- Axios usa `withCredentials: true`.
+- El frontend no envia `Authorization: Bearer`.
+- El JWT no se guarda en `localStorage` ni `sessionStorage`.
+- El usuario y menu no sensibles se restauran con `GET /api/auth/me`.
+- Un 401 limpia la sesion local y redirige a `/login`.
+- Logout llama al backend y sincroniza otras pestanas con `BroadcastChannel`.
+
+## Tailwind CSS
+
+Configuracion:
+
+```text
+tailwind.config.js
+postcss.config.js
+src/styles/global.css
+src/styles/layout.css
+```
 
 ## Credenciales seed
 

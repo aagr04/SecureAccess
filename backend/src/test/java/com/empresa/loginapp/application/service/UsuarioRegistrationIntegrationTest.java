@@ -70,15 +70,11 @@ class UsuarioRegistrationIntegrationTest {
         AuthResponse loginEmail = auth.login(login("jpiguavel@mail.com"));
         assertThat(loginEmail.getToken()).isNotBlank();
         assertThat(loginEmail.getEmail()).isEqualTo("jpiguavel@mail.com");
-        assertThatThrownBy(() -> auth.login(login("Juan2024A")))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("sesion activa");
-
-        auth.logout("Juan2024A");
-
         AuthResponse loginUsername = auth.login(login("Juan2024A"));
         assertThat(loginUsername.getToken()).isNotBlank();
         assertThat(loginUsername.getUsername()).isEqualTo("Juan2024A");
+
+        auth.logout("Juan2024A");
     }
 
     private UsuarioRequest request(String username, String identificacion, String nombres, String apellidos, String email, Long idRol) {

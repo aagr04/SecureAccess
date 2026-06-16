@@ -9,7 +9,6 @@ describe('ProtectedRoute', () => {
     render(
       <AuthContext.Provider
         value={{
-          token: null,
           user: null,
           menu: [],
           isAuthenticated: false,

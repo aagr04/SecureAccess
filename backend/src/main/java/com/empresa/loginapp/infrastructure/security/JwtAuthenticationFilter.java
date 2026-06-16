@@ -19,14 +19,22 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final CookieService cookieService;
+    private final TokenSessionService tokenSessionService;
+
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        String header = request.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
+        String token = cookieService.resolveAccessToken(request).orElse(null);
+        if (token == null) {
             chain.doFilter(request, response);
             return;
         }
         try {
-            String token = header.substring(7);
+            String jti = jwtService.extractJti(token);
+            if (tokenSessionService.isInvalidated(jti)) {
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
             String username = jwtService.extractUsername(token);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);

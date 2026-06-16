@@ -1,5 +1,4 @@
 import axios, { AxiosError } from 'axios';
-import { storage } from '../utils/storage';
 
 interface BackendError {
   message?: string;
@@ -20,17 +19,10 @@ const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api'
 
 export const axiosClient = axios.create({
   baseURL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
-});
-
-axiosClient.interceptors.request.use((config) => {
-  const token = storage.getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
 });
 
 axiosClient.interceptors.response.use(
@@ -38,8 +30,10 @@ axiosClient.interceptors.response.use(
   (error: AxiosError<BackendError>) => {
     const status = error.response?.status;
 
+    // 401 means the session cookie is absent, expired, or invalidated.
+    // 403 means the user is authenticated but not authorized; keep the session active.
     if (status === 401) {
-      storage.clear();
+      window.dispatchEvent(new Event('auth:unauthorized'));
       if (window.location.pathname !== '/login') {
         window.location.assign('/login');
       }
@@ -62,7 +56,7 @@ const mapBackendError = (message?: string, status?: number): string => {
   if (normalized.includes('bloque')) return 'Usuario bloqueado.';
   if (normalized.includes('sesion activa')) return 'El usuario ya tiene una sesion activa.';
   if (status === 403) return message || 'Acceso denegado.';
-  if (status === 401) return 'Token expirado o invalido. Inicie sesion nuevamente.';
+  if (status === 401) return 'Sesion expirada o invalida. Inicie sesion nuevamente.';
   if (status === 400) return message || 'Error de validacion.';
   if (status && status >= 500) return 'Error de servidor. Intente nuevamente mas tarde.';
   return message || 'Ocurrio un error inesperado.';

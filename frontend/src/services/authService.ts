@@ -10,6 +10,10 @@ export const authService = {
   logout: async (): Promise<void> => {
     await axiosClient.post(endpoints.auth.logout);
   },
+  me: async (): Promise<LoginResponse> => {
+    const { data } = await axiosClient.get<LoginResponse>(endpoints.auth.me);
+    return data;
+  },
   recoverPassword: async (request: RecoverPasswordRequest): Promise<RecoverPasswordResponse> => {
     const { data } = await axiosClient.post<RecoverPasswordResponse>(endpoints.auth.recover, request);
     return data;

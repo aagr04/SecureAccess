@@ -1,7 +1,6 @@
 import type { AuthUser } from '../types/auth.types';
 import type { MenuItem } from '../types/menu.types';
 
-const TOKEN_KEY = 'loginapp.token';
 const USER_KEY = 'loginapp.user';
 const MENU_KEY = 'loginapp.menu';
 
@@ -14,8 +13,6 @@ const normalizeMenu = (menu: MenuItem[]): MenuItem[] =>
   });
 
 export const storage = {
-  getToken: (): string | null => localStorage.getItem(TOKEN_KEY),
-  setToken: (token: string): void => localStorage.setItem(TOKEN_KEY, token),
   getUser: (): AuthUser | null => {
     const raw = localStorage.getItem(USER_KEY);
     return raw ? (JSON.parse(raw) as AuthUser) : null;
@@ -30,7 +27,6 @@ export const storage = {
   },
   setMenu: (menu: MenuItem[]): void => localStorage.setItem(MENU_KEY, JSON.stringify(normalizeMenu(menu))),
   clear: (): void => {
-    localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(MENU_KEY);
   }

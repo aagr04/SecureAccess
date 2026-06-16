@@ -1,4 +1,4 @@
-package com.empresa.loginapp.infrastructure.adapter.in.web;
+package com.empresa.loginapp.infrastructure.adapter.in.web.api;
 
 import com.empresa.loginapp.domain.port.in.DashboardUseCase;
 import com.empresa.loginapp.shared.dto.response.DashboardResumenResponse;

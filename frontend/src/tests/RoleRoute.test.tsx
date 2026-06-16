@@ -10,7 +10,6 @@ describe('RoleRoute', () => {
     render(
       <AuthContext.Provider
         value={{
-          token: 'token',
           user: { idUsuario: 1, username: 'User1234', email: 'user@test.com', rol: 'USER' },
           menu: [],
           isAuthenticated: true,

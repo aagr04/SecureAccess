@@ -4,6 +4,7 @@ import com.empresa.loginapp.domain.exception.BusinessException;
 import com.empresa.loginapp.domain.model.*;
 import com.empresa.loginapp.domain.port.out.*;
 import com.empresa.loginapp.infrastructure.security.JwtService;
+import com.empresa.loginapp.infrastructure.security.TokenSessionService;
 import com.empresa.loginapp.shared.dto.request.LoginRequest;
 import com.empresa.loginapp.shared.dto.response.MenuResponse;
 import org.junit.jupiter.api.*;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import java.time.Duration;
 import java.util.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -27,12 +29,14 @@ class AuthApplicationServiceTest {
     MenuFunctionPort menuFunction;
     @Mock
     JwtService jwtService;
+    @Mock
+    TokenSessionService tokenSessionService;
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
     AuthApplicationService service;
 
     @BeforeEach
     void setup() {
-        service = new AuthApplicationService(usuarios, rolUsuarios, sesiones, menuFunction, encoder, jwtService);
+        service = new AuthApplicationService(usuarios, rolUsuarios, sesiones, menuFunction, encoder, jwtService, tokenSessionService);
     }
 
     @Test
@@ -89,11 +93,23 @@ class AuthApplicationServiceTest {
     }
 
     @Test
-    void sesionActivaDuplicada() {
+    void loginConSesionActivaReemplazaSesionAnterior() {
         Usuario usuario = usuario(encoder.encode("Admin@1234"));
         usuario.setSesionActiva(true);
+        Sesion sesion = Sesion.builder().idSesion(1L).idUsuario(1L).activa(true).mensaje("LOGIN_OK").build();
         when(usuarios.findByCredential("Admin1234")).thenReturn(Optional.of(usuario));
-        assertThatThrownBy(() -> service.login(login("Admin1234", "Admin@1234"))).isInstanceOf(BusinessException.class);
+        when(rolUsuarios.findActiveByUsuarioId(1L)).thenReturn(Optional.of(RolUsuario.builder().usuario(usuario).rol(Rol.builder().idRol(1L).nombre("ADMIN").build()).build()));
+        when(sesiones.findActiveByUsuario(1L)).thenReturn(Optional.of(sesion));
+        when(usuarios.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(sesiones.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(jwtService.generateToken(any(), any())).thenReturn("token");
+
+        assertThat(service.login(login("Admin1234", "Admin@1234")).getToken()).isEqualTo("token");
+
+        assertThat(sesion.getActiva()).isFalse();
+        assertThat(sesion.getFechaCierre()).isNotNull();
+        assertThat(sesion.getMensaje()).isEqualTo("LOGIN_REPLACED");
+        assertThat(usuario.getSesionActiva()).isTrue();
     }
 
     @Test
@@ -111,6 +127,21 @@ class AuthApplicationServiceTest {
         assertThat(sesion.getFechaCierre()).isNotNull();
         verify(usuarios).save(usuario);
         verify(sesiones).save(sesion);
+    }
+
+    @Test
+    void logoutInvalidaTokenConJtiYTtl() {
+        Usuario usuario = usuario(encoder.encode("Admin@1234"));
+        Duration ttl = Duration.ofMinutes(30);
+        when(jwtService.extractJti("jwt-token")).thenReturn("jti-123");
+        when(jwtService.remainingTtl("jwt-token")).thenReturn(ttl);
+        when(usuarios.findByUsername("Admin1234")).thenReturn(Optional.of(usuario));
+        when(sesiones.findActiveByUsuario(1L)).thenReturn(Optional.empty());
+
+        service.logout("Admin1234", "jwt-token");
+
+        verify(tokenSessionService).invalidate("jti-123", ttl);
+        assertThat(usuario.getSesionActiva()).isFalse();
     }
 
     private LoginRequest login(String credential, String password) {

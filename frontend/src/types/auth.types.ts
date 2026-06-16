@@ -6,7 +6,6 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
   idUsuario: number;
   username: string;
   email: string;
@@ -35,7 +34,6 @@ export interface AuthUser {
 }
 
 export interface AuthState {
-  token: string | null;
   user: AuthUser | null;
   menu: MenuItem[];
   isAuthenticated: boolean;

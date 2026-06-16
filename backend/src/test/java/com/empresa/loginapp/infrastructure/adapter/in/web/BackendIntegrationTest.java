@@ -53,7 +53,7 @@ class BackendIntegrationTest {
     void loginCorrectoEIncorrecto() throws Exception {
         when(authUseCase.login(any())).thenReturn(AuthResponse.builder().token("token").username("Admin1234").rol("ADMIN").build());
         mockMvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"login\":\"Admin1234\",\"password\":\"Admin@1234\"}"))
+                        .content("{\"login\":\"Admin1234\",\"password\":\"AdminViamatica@500\"}"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("ACCESS_TOKEN=token")))
                 .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("HttpOnly")))

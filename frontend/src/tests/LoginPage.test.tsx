@@ -45,7 +45,7 @@ describe('LoginPage', () => {
     loginMock.mockRejectedValueOnce(new Error('Usuario bloqueado.'));
     renderLogin();
     fireEvent.change(screen.getByLabelText(/usuario o correo/i), { target: { value: 'Admin1234' } });
-    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'Admin@1234' } });
+    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'AdminViamatica@500' } });
     fireEvent.click(screen.getByRole('button', { name: /ingresar/i }));
     await waitFor(() => expect(screen.getByText('Usuario bloqueado.')).toBeInTheDocument());
   });
@@ -74,7 +74,7 @@ describe('LoginPage', () => {
     );
 
     fireEvent.change(screen.getByLabelText(/usuario o correo/i), { target: { value: 'Admin1234' } });
-    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'Admin@1234' } });
+    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'AdminViamatica@500' } });
     fireEvent.click(screen.getByRole('button', { name: /ingresar/i }));
 
     await waitFor(() => expect(screen.getByText('Bienvenida destino')).toBeInTheDocument());

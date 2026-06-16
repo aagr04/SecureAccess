@@ -19,7 +19,7 @@ class DomainValidatorsTest {
     @Test
     void passwordValidoEInvalido() {
         PasswordValidator validator = new PasswordValidator();
-        assertThatCode(() -> validator.validate("Admin@1234")).doesNotThrowAnyException();
+        assertThatCode(() -> validator.validate("AdminViamatica@500")).doesNotThrowAnyException();
         assertThatThrownBy(() -> validator.validate("Admin 1234")).isInstanceOf(BusinessException.class);
         assertThatThrownBy(() -> validator.validate("Abc@12")).isInstanceOf(BusinessException.class);
         assertThatThrownBy(() -> validator.validate("clave@123")).isInstanceOf(BusinessException.class);

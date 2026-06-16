@@ -105,13 +105,13 @@ ADMIN:
 
 - username: `Admin1234`
 - email: `padmin@mail.com`
-- password: `AdminViamatica2026`
+- password: `AdminViamatica@500`
 
 USER:
 
 - username: `User1234`
 - email: `puser@mail.com`
-- password: `UserViamatica2026`
+- password: `UserViamatica@500`
 
 ## Pruebas
 

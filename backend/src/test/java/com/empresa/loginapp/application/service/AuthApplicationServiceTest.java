@@ -41,7 +41,7 @@ class AuthApplicationServiceTest {
 
     @Test
     void loginCorrectoConUsername() {
-        Usuario usuario = usuario(encoder.encode("Admin@1234"));
+        Usuario usuario = usuario(encoder.encode("AdminViamatica@500"));
         usuario.setIntentosFallidos(2);
         RolUsuario ru = RolUsuario.builder().usuario(usuario).rol(Rol.builder().idRol(1L).nombre("ADMIN").activo(true).build()).activo(true).build();
         when(usuarios.findByCredential("Admin1234")).thenReturn(Optional.of(usuario));
@@ -50,7 +50,7 @@ class AuthApplicationServiceTest {
         when(sesiones.save(any())).thenAnswer(i -> i.getArgument(0));
         when(menuFunction.menuPorRol(1L)).thenReturn(List.of(MenuResponse.builder().nombre("Dashboard").build()));
         when(jwtService.generateToken(any(), eq("ADMIN"))).thenReturn("token");
-        LoginRequest request = login("Admin1234", "Admin@1234");
+        LoginRequest request = login("Admin1234", "AdminViamatica@500");
         assertThat(service.login(request).getToken()).isEqualTo("token");
         assertThat(usuario.getIntentosFallidos()).isZero();
         assertThat(usuario.getSesionActiva()).isTrue();
@@ -58,18 +58,18 @@ class AuthApplicationServiceTest {
 
     @Test
     void loginCorrectoConEmail() {
-        Usuario usuario = usuario(encoder.encode("Admin@1234"));
+        Usuario usuario = usuario(encoder.encode("AdminViamatica@500"));
         when(usuarios.findByCredential("admin@mail.com")).thenReturn(Optional.of(usuario));
         when(rolUsuarios.findActiveByUsuarioId(1L)).thenReturn(Optional.of(RolUsuario.builder().usuario(usuario).rol(Rol.builder().idRol(1L).nombre("ADMIN").build()).build()));
         when(usuarios.save(any())).thenAnswer(i -> i.getArgument(0));
         when(sesiones.save(any())).thenAnswer(i -> i.getArgument(0));
         when(jwtService.generateToken(any(), any())).thenReturn("token");
-        assertThat(service.login(login("admin@mail.com", "Admin@1234")).getToken()).isEqualTo("token");
+        assertThat(service.login(login("admin@mail.com", "AdminViamatica@500")).getToken()).isEqualTo("token");
     }
 
     @Test
     void passwordIncorrectoRegistraIntento() {
-        Usuario usuario = usuario(encoder.encode("Admin@1234"));
+        Usuario usuario = usuario(encoder.encode("AdminViamatica@500"));
         when(usuarios.findByCredential("Admin1234")).thenReturn(Optional.of(usuario));
         when(rolUsuarios.findActiveByUsuarioId(1L)).thenReturn(Optional.of(RolUsuario.builder().usuario(usuario).rol(Rol.builder().idRol(1L).nombre("ADMIN").build()).build()));
         when(usuarios.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -81,7 +81,7 @@ class AuthApplicationServiceTest {
 
     @Test
     void bloqueoAlTercerIntento() {
-        Usuario usuario = usuario(encoder.encode("Admin@1234"));
+        Usuario usuario = usuario(encoder.encode("AdminViamatica@500"));
         usuario.setIntentosFallidos(2);
         when(usuarios.findByCredential("Admin1234")).thenReturn(Optional.of(usuario));
         when(rolUsuarios.findActiveByUsuarioId(1L)).thenReturn(Optional.of(RolUsuario.builder().usuario(usuario).rol(Rol.builder().idRol(1L).nombre("ADMIN").build()).build()));
@@ -94,7 +94,7 @@ class AuthApplicationServiceTest {
 
     @Test
     void loginConSesionActivaReemplazaSesionAnterior() {
-        Usuario usuario = usuario(encoder.encode("Admin@1234"));
+        Usuario usuario = usuario(encoder.encode("AdminViamatica@500"));
         usuario.setSesionActiva(true);
         Sesion sesion = Sesion.builder().idSesion(1L).idUsuario(1L).activa(true).mensaje("LOGIN_OK").build();
         when(usuarios.findByCredential("Admin1234")).thenReturn(Optional.of(usuario));
@@ -104,7 +104,7 @@ class AuthApplicationServiceTest {
         when(sesiones.save(any())).thenAnswer(i -> i.getArgument(0));
         when(jwtService.generateToken(any(), any())).thenReturn("token");
 
-        assertThat(service.login(login("Admin1234", "Admin@1234")).getToken()).isEqualTo("token");
+        assertThat(service.login(login("Admin1234", "AdminViamatica@500")).getToken()).isEqualTo("token");
 
         assertThat(sesion.getActiva()).isFalse();
         assertThat(sesion.getFechaCierre()).isNotNull();
@@ -114,7 +114,7 @@ class AuthApplicationServiceTest {
 
     @Test
     void logoutCierraSesionActiva() {
-        Usuario usuario = usuario(encoder.encode("Admin@1234"));
+        Usuario usuario = usuario(encoder.encode("AdminViamatica@500"));
         usuario.setSesionActiva(true);
         Sesion sesion = Sesion.builder().idSesion(1L).idUsuario(1L).activa(true).mensaje("LOGIN_OK").build();
         when(usuarios.findByUsername("Admin1234")).thenReturn(Optional.of(usuario));
@@ -131,7 +131,7 @@ class AuthApplicationServiceTest {
 
     @Test
     void logoutInvalidaTokenConJtiYTtl() {
-        Usuario usuario = usuario(encoder.encode("Admin@1234"));
+        Usuario usuario = usuario(encoder.encode("AdminViamatica@500"));
         Duration ttl = Duration.ofMinutes(30);
         when(jwtService.extractJti("jwt-token")).thenReturn("jti-123");
         when(jwtService.remainingTtl("jwt-token")).thenReturn(ttl);

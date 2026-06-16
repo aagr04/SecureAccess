@@ -69,15 +69,35 @@ app.cors.allowed-origins=https://URL_FRONTEND_PUBLICO
 
 ## Ejecutar scripts
 
-Desde la carpeta raiz:
+Desde la carpeta raiz del repositorio:
 
 ```bash
-psql -U postgres -d postgres -f database/01_create_database.sql
-psql -U postgres -d loginapp_db -f database/02_schema.sql
-psql -U postgres -d loginapp_db -f database/03_functions.sql
-psql -U postgres -d loginapp_db -f database/04_seed_data.sql
-psql -U postgres -d loginapp_db -f database/05_test_queries.sql
+psql -U postgres -d postgres -f "DataBase Script/01_create_database.sql"
+psql -U postgres -d loginapp_db -f "DataBase Script/02_schema.sql"
+psql -U postgres -d loginapp_db -f "DataBase Script/03_functions.sql"
+psql -U postgres -d loginapp_db -f "DataBase Script/04_seed_data.sql"
+psql -U postgres -d loginapp_db -f "DataBase Script/05_test_queries.sql"
 ```
+
+El compose refresca las credenciales por defecto en cada arranque para que un volumen previo no deje usuarios con passwords antiguos.
+
+## Ejecucion local con Docker Compose
+
+Desde la raiz del repositorio:
+
+```bash
+copy .env.example .env
+docker compose up --build
+```
+
+Servicios incluidos:
+
+- `backend`
+- `frontend`
+- `postgres`
+- `redis`
+
+El backend toma la base de datos, Redis, cookies seguras y CORS desde variables de entorno definidas para entorno `local/dev`.
 
 ## Abrir en IntelliJ IDEA
 
@@ -143,13 +163,13 @@ ADMIN:
 
 - username: `Admin1234`
 - email: `padmin@mail.com`
-- password: `AdminViamatica2026`
+- password: `AdminViamatica@500`
 
 USER:
 
 - username: `User1234`
 - email: `puser@mail.com`
-- password: `UserViamatica2026`
+- password: `UserViamatica@500`
 
 ## Menu dinamico
 
@@ -170,12 +190,12 @@ El endpoint REST que consume esa pagina es `GET /api/sessions`.
 ADMIN:
 
 - username: `Admin1234`
-- password: `Admin@1234`
+- password: `AdminViamatica@500`
 
 USER:
 
 - username: `User1234`
-- password: `User@1234`
+- password: `UserViamatica@500`
 
 ## Endpoints principales
 

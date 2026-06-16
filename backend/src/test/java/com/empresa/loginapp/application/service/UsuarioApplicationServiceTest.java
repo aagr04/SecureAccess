@@ -200,7 +200,7 @@ class UsuarioApplicationServiceTest {
 
     private UsuarioRequest request() {
         UsuarioRequest r = new UsuarioRequest();
-        r.setUsername("Admin1234"); r.setPassword("Admin@1234"); r.setNombres("Persona"); r.setApellidos("Admin"); r.setIdentificacion("0912345678");
+        r.setUsername("Admin1234"); r.setPassword("AdminViamatica@500"); r.setNombres("Persona"); r.setApellidos("Admin"); r.setIdentificacion("0912345678");
         return r;
     }
 }

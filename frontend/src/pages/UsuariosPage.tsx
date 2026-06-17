@@ -63,7 +63,7 @@ export const UsuariosPage = () => {
         </>
       ) : null}
       <div ref={editFormRef}>
-        <UsuarioForm usuario={selected} isAdmin={admin} onSubmit={guardar} />
+        <UsuarioForm usuario={selected} isAdmin={admin} onSubmit={guardar} onSaved={() => setSelected(null)} onCancelEdit={() => setSelected(null)} />
       </div>
       {loading ? (
         <Loader />

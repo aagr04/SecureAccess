@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import type { UsuarioFilter } from '../../types/usuario.types';
-import { USER_STATUS } from '../../utils/constants';
 import { Button } from '../shared/Button';
 import { Input } from '../shared/Input';
-import { Select } from '../shared/Select';
 
 interface UsuarioFiltersProps {
   onFilter: (filters: UsuarioFilter) => void;
@@ -13,49 +11,34 @@ interface UsuarioFiltersProps {
 const initialFilters: UsuarioFilter = {};
 
 export const buildUsuarioFilters = (filters: UsuarioFilter): UsuarioFilter =>
-  Object.fromEntries(
-    Object.entries(filters)
-      .map(([key, value]) => [key, value?.trim()] as const)
-      .filter(([, value]) => value && value !== 'Seleccione')
-  ) as UsuarioFilter;
+  filters.identificacion?.trim() ? { identificacion: filters.identificacion.trim() } : {};
 
 export const UsuarioFilters = ({ onFilter, onClear }: UsuarioFiltersProps) => {
   const [filters, setFilters] = useState<UsuarioFilter>(initialFilters);
-  const update = (field: keyof UsuarioFilter, value: string): void => setFilters((current) => ({ ...current, [field]: value }));
+  const filterUsers = (): void => onFilter(buildUsuarioFilters(filters));
+  const clearFilters = (): void => {
+    setFilters(initialFilters);
+    onClear();
+  };
+  const updateIdentification = (value: string): void => {
+    setFilters({ identificacion: value.replace(/\D/g, '').slice(0, 10) });
+  };
 
   return (
-    <form
-      className="filters-grid panel"
-      onSubmit={(event) => {
-        event.preventDefault();
-        onFilter(buildUsuarioFilters(filters));
-      }}
-    >
-      <Input label="Nombres" value={filters.nombres ?? ''} onChange={(e) => update('nombres', e.target.value)} />
-      <Input label="Apellidos" value={filters.apellidos ?? ''} onChange={(e) => update('apellidos', e.target.value)} />
-      <Input label="Identificacion" value={filters.identificacion ?? ''} onChange={(e) => update('identificacion', e.target.value)} />
-      <Input label="Username" value={filters.username ?? ''} onChange={(e) => update('username', e.target.value)} />
-      <Input label="Email" value={filters.email ?? ''} onChange={(e) => update('email', e.target.value)} />
-      <Select
-        label="Estado"
-        value={filters.status ?? ''}
-        onChange={(e) => update('status', e.target.value)}
-        options={USER_STATUS.map((status) => ({ value: status, label: status }))}
+    <form className="filters-grid panel" autoComplete="off" onSubmit={(event) => event.preventDefault()}>
+      <Input
+        label="Identificacion"
+        inputMode="numeric"
+        maxLength={10}
+        placeholder="Ingrese identificacion"
+        value={filters.identificacion ?? ''}
+        onChange={(e) => updateIdentification(e.target.value)}
       />
-      <Input label="Rol" value={filters.rol ?? ''} onChange={(e) => update('rol', e.target.value)} />
       <div className="actions-row">
-        <Button type="submit" tooltip="Filtrar usuarios">
+        <Button type="button" variant="primary" tooltip="Filtrar por identificación" onClick={filterUsers}>
           Filtrar
         </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          tooltip="Limpiar filtros"
-          onClick={() => {
-            setFilters(initialFilters);
-            onClear();
-          }}
-        >
+        <Button type="button" variant="secondary" tooltip="Limpiar filtro" onClick={clearFilters}>
           Limpiar
         </Button>
       </div>

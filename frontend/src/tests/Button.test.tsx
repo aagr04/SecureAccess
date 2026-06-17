@@ -15,4 +15,17 @@ describe('Button', () => {
     expect(button).toHaveClass('btn-danger');
     expect(button).toHaveClass('logout-button');
   });
+
+  it('aplica variante primaria celeste', () => {
+    render(
+      <Button type="button" tooltip="Filtrar usuarios">
+        Filtrar
+      </Button>
+    );
+
+    const button = screen.getByRole('button', { name: /filtrar usuarios/i });
+    expect(button).toHaveClass('btn-primary');
+    expect(button).toHaveClass('bg-sky-500');
+    expect(button).toHaveClass('hover:bg-sky-600');
+  });
 });

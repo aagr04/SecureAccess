@@ -1,81 +1,81 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { buildUsuarioFilters, UsuarioFilters } from '../components/usuarios/UsuarioFilters';
-import { cleanUsuarioFilters } from '../services/usuarioService';
 
 describe('UsuarioFilters', () => {
-  it('construye filtros sin valores vacios', () => {
-    expect(buildUsuarioFilters({ username: ' Admin1234 ', email: '', status: 'ACTIVO' })).toEqual({
-      username: 'Admin1234',
-      status: 'ACTIVO'
+  it('construye filtros solo con identificacion', () => {
+    expect(buildUsuarioFilters({ identificacion: ' 1203574901 ', username: 'Admin1234', email: 'x@mail.com' })).toEqual({
+      identificacion: '1203574901'
     });
+    expect(buildUsuarioFilters({ identificacion: ' ' })).toEqual({});
   });
 
   it('permite filtrar usando solo identificacion', () => {
     const onFilter = vi.fn();
     render(<UsuarioFilters onFilter={onFilter} onClear={vi.fn()} />);
 
+    const filterButton = screen.getByRole('button', { name: /filtrar por identificación/i });
+    expect(filterButton).toHaveClass('bg-sky-500');
+
     fireEvent.change(screen.getByLabelText(/identificacion/i), { target: { value: '1203574901' } });
-    fireEvent.click(screen.getByRole('button', { name: /filtrar usuarios/i }));
+    fireEvent.click(filterButton);
 
     expect(onFilter).toHaveBeenCalledWith({ identificacion: '1203574901' });
   });
 
-  it('permite filtrar usando solo username', () => {
+  it('normaliza la identificacion a numeros y maximo 10 digitos', () => {
     const onFilter = vi.fn();
     render(<UsuarioFilters onFilter={onFilter} onClear={vi.fn()} />);
 
-    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'Agustin1999' } });
-    fireEvent.click(screen.getByRole('button', { name: /filtrar usuarios/i }));
+    fireEvent.change(screen.getByLabelText(/identificacion/i), { target: { value: 'abc120357490199' } });
+    fireEvent.click(screen.getByRole('button', { name: /filtrar por identificación/i }));
 
-    expect(onFilter).toHaveBeenCalledWith({ username: 'Agustin1999' });
+    expect(screen.getByLabelText(/identificacion/i)).toHaveValue('1203574901');
+    expect(onFilter).toHaveBeenCalledWith({ identificacion: '1203574901' });
   });
 
-  it('permite filtrar usando solo email', () => {
-    const onFilter = vi.fn();
-    render(<UsuarioFilters onFilter={onFilter} onClear={vi.fn()} />);
+  it('renderiza solo identificacion como filtro visible', () => {
+    render(<UsuarioFilters onFilter={vi.fn()} onClear={vi.fn()} />);
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'aguevarar@mail.com' } });
-    fireEvent.click(screen.getByRole('button', { name: /filtrar usuarios/i }));
-
-    expect(onFilter).toHaveBeenCalledWith({ email: 'aguevarar@mail.com' });
-  });
-
-  it('permite filtrar por nombres y apellidos juntos sin exigir otros campos', () => {
-    const onFilter = vi.fn();
-    render(<UsuarioFilters onFilter={onFilter} onClear={vi.fn()} />);
-
-    fireEvent.change(screen.getByLabelText(/nombres/i), { target: { value: 'Agustin' } });
-    fireEvent.change(screen.getByLabelText(/apellidos/i), { target: { value: 'Guevara' } });
-    fireEvent.click(screen.getByRole('button', { name: /filtrar usuarios/i }));
-
-    expect(onFilter).toHaveBeenCalledWith({ nombres: 'Agustin', apellidos: 'Guevara' });
-  });
-
-  it('ignora estado seleccione y construye parametros solo con campos llenos', () => {
-    expect(cleanUsuarioFilters({
-      nombres: '',
-      apellidos: '  Reyes ',
-      identificacion: '',
-      username: undefined,
-      email: ' ',
-      status: 'Seleccione',
-      rol: ' USER '
-    })).toEqual({
-      apellidos: 'Reyes',
-      rol: 'USER'
-    });
+    expect(screen.getByLabelText(/identificacion/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/nombres/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/apellidos/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/username/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/estado/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^rol$/i)).not.toBeInTheDocument();
   });
 
   it('limpiar vacia los campos y recarga la lista inicial', () => {
     const onClear = vi.fn();
     render(<UsuarioFilters onFilter={vi.fn()} onClear={onClear} />);
 
-    const username = screen.getByLabelText(/username/i);
-    fireEvent.change(username, { target: { value: 'Agustin1999' } });
-    fireEvent.click(screen.getByRole('button', { name: /limpiar filtros/i }));
+    const identificacion = screen.getByLabelText(/identificacion/i);
+    const clearButton = screen.getByRole('button', { name: /limpiar filtro/i });
+    expect(clearButton).toHaveClass('border-sky-500');
+    expect(clearButton).toHaveClass('text-sky-600');
+    expect(clearButton).toHaveAttribute('type', 'button');
 
-    expect(username).toHaveValue('');
+    fireEvent.change(identificacion, { target: { value: '1203574901' } });
+    fireEvent.click(clearButton);
+
+    expect(identificacion).toHaveValue('');
     expect(onClear).toHaveBeenCalled();
+  });
+
+  it('renderiza filtrar y limpiar como botones celestes con tooltip', () => {
+    render(<UsuarioFilters onFilter={vi.fn()} onClear={vi.fn()} />);
+
+    const filterButton = screen.getByRole('button', { name: /filtrar por identificación/i });
+    const clearButton = screen.getByRole('button', { name: /limpiar filtro/i });
+
+    expect(filterButton).toHaveClass('bg-sky-500');
+    expect(filterButton).toHaveClass('text-white');
+    expect(filterButton).toHaveAttribute('title', 'Filtrar por identificación');
+    expect(filterButton).toHaveAttribute('type', 'button');
+    expect(clearButton).toHaveClass('border-sky-500');
+    expect(clearButton).toHaveClass('text-sky-600');
+    expect(clearButton).toHaveAttribute('title', 'Limpiar filtro');
+    expect(clearButton).toHaveAttribute('type', 'button');
   });
 });

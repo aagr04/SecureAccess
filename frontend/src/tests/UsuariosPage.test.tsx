@@ -49,7 +49,9 @@ describe('UsuariosPage', () => {
 
     render(<UsuariosPage />);
 
-    expect(screen.getByRole('button', { name: /filtrar usuarios/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/identificacion/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/username/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /filtrar por identificación/i })).toBeInTheDocument();
     expect(screen.getByText('Carga masiva')).toBeInTheDocument();
   });
 
@@ -58,7 +60,7 @@ describe('UsuariosPage', () => {
 
     render(<UsuariosPage />);
 
-    expect(screen.queryByRole('button', { name: /filtrar usuarios/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /filtrar por identificación/i })).not.toBeInTheDocument();
     expect(screen.queryByText('Carga masiva')).not.toBeInTheDocument();
   });
 
@@ -66,10 +68,10 @@ describe('UsuariosPage', () => {
     mocks.useAuth.mockReturnValue({ user: { rol: 'ADMIN' } });
 
     render(<UsuariosPage />);
-    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'NoExiste1999' } });
-    fireEvent.click(screen.getByRole('button', { name: /filtrar usuarios/i }));
+    fireEvent.change(screen.getByLabelText(/identificacion/i), { target: { value: '1203574901' } });
+    fireEvent.click(screen.getByRole('button', { name: /filtrar por identificación/i }));
 
-    expect(filtrar).toHaveBeenCalledWith({ username: 'NoExiste1999' });
+    expect(filtrar).toHaveBeenCalledWith({ identificacion: '1203574901' });
     expect(screen.getByText('No se encontraron usuarios con los filtros ingresados.')).toBeInTheDocument();
   });
 
@@ -77,7 +79,7 @@ describe('UsuariosPage', () => {
     mocks.useAuth.mockReturnValue({ user: { rol: 'ADMIN' } });
 
     render(<UsuariosPage />);
-    fireEvent.click(screen.getByRole('button', { name: /limpiar filtros/i }));
+    fireEvent.click(screen.getByRole('button', { name: /limpiar filtro/i }));
 
     expect(listar).toHaveBeenCalled();
   });

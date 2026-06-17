@@ -103,13 +103,13 @@ src/styles/layout.css
 
 ADMIN:
 
-- username: `Admin1234`
+- username: `AdminViamatica500`
 - email: `padmin@mail.com`
 - password: `AdminViamatica@500`
 
 USER:
 
-- username: `User1234`
+- username: `UserViamatica500`
 - email: `puser@mail.com`
 - password: `UserViamatica@500`
 

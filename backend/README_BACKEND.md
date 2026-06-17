@@ -72,11 +72,9 @@ app.cors.allowed-origins=https://URL_FRONTEND_PUBLICO
 Desde la carpeta raiz del repositorio:
 
 ```bash
-psql -U postgres -d postgres -f "DataBase Script/01_create_database.sql"
-psql -U postgres -d loginapp_db -f "DataBase Script/02_schema.sql"
-psql -U postgres -d loginapp_db -f "DataBase Script/03_functions.sql"
-psql -U postgres -d loginapp_db -f "DataBase Script/04_seed_data.sql"
-psql -U postgres -d loginapp_db -f "DataBase Script/05_test_queries.sql"
+psql -U postgres -d loginapp_db -f "database/01_schema.sql"
+psql -U postgres -d loginapp_db -f "database/02_functions.sql"
+psql -U postgres -d loginapp_db -f "database/03_seed_data.sql"
 ```
 
 El compose refresca las credenciales por defecto en cada arranque para que un volumen previo no deje usuarios con passwords antiguos.
@@ -161,13 +159,13 @@ Rutas ADMIN:
 
 ADMIN:
 
-- username: `Admin1234`
+- username: `AdminViamatica500`
 - email: `padmin@mail.com`
 - password: `AdminViamatica@500`
 
 USER:
 
-- username: `User1234`
+- username: `UserViamatica500`
 - email: `puser@mail.com`
 - password: `UserViamatica@500`
 
@@ -189,12 +187,12 @@ El endpoint REST que consume esa pagina es `GET /api/sessions`.
 
 ADMIN:
 
-- username: `Admin1234`
+- username: `AdminViamatica500`
 - password: `AdminViamatica@500`
 
 USER:
 
-- username: `User1234`
+- username: `UserViamatica500`
 - password: `UserViamatica@500`
 
 ## Endpoints principales

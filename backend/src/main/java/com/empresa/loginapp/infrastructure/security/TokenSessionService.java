@@ -12,7 +12,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 @Slf4j
 public class TokenSessionService {
-    private static final String BLACKLIST_PREFIX = "blacklist:token:";
+    private static final String BLACKLIST_PREFIX = "logout:token:";
 
     private final RedisTemplate<String, String> redisTemplate;
 
